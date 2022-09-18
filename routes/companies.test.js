@@ -227,3 +227,8 @@ describe("DELETE /companies/:handle", function () {
     expect(resp.statusCode).toEqual(404);
   });
 });
+
+/************************************************* GET /companies with filters */
+
+describe()
+ 
