@@ -52,14 +52,11 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
 
 router.get("/", async function (req, res, next) {
   try {
-    const keys = Object.keys(req.query)
+    
     const authroizedVals = ['name', 'minEmployees', 'maxEmployees']
-    console.log(req.query)
     for(let key in req.query) { 
       if (!authroizedVals.includes(key)) throw new BadRequestError('Invalid filter name')
     }
-    
-    
     const companies = await Company.findAll(req.query);
     return res.json({companies});
   } catch (err) {
