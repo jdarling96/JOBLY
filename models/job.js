@@ -7,20 +7,25 @@ const { sqlForPartialUpdate } = require("../helpers/sql");
 
 class jobs {
   
-    static async create({ title, salary, equity, company_handle }) {
-    const checkCompany = await Company.get(company_handle);
-    if (checkCompany) {
+    static async create({ title, salary, equity, companyHandle }) {
+    const checkCompany = await db.query(
+        `SELECT handle
+         FROM companies
+         WHERE handle = $1`,
+         [companyHandle]
+    )
+    if (!checkCompany.rows[0]) throw new NotFoundError(`No company: ${companyHandle}`);
       const result = await db.query(
         `INSERT INTO jobs
              (title, salary, equity, company_handle)
              VALUES ($1, $2, $3, $4)
              RETURNING id,title, salary, equity, company_handle AS "companyHandle"`,
-        [title, salary, equity, checkCompany.handle]
+        [title, salary, equity, companyHandle]
       );
       const job = result.rows[0];
 
       return job;
-    }
+    
   }
 
   static async findAll(searchFilters = {}) {
@@ -38,7 +43,7 @@ class jobs {
 
     const { title, minSalary, hasEquity } = searchFilters;
 
-    if (minSalary < 0 || Number.isInteger(hasEquity))
+    if (parseInt(minSalary) < 0)
       throw new BadRequestError("Invalid filter constraint");
 
     if (title !== undefined) {
@@ -52,7 +57,7 @@ class jobs {
     }
 
     if (hasEquity) {
-      queryValues.push(hasEquity);
+      queryValues.push(0.0);
       whereExpressions.push(`equity > $${queryValues.length}`);
     }
 

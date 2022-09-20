@@ -2,7 +2,7 @@
 
 const db = require("../db.js");
 const { BadRequestError, NotFoundError } = require("../expressError");
-const Jobs = require("./jobs");
+const Jobs = require("./job");
 const {
   commonBeforeAll,
   commonBeforeEach,
@@ -22,7 +22,7 @@ describe("create", function () {
     title: "new",
     salary: 1000,
     equity: 0.456,
-    company_handle: "c1",
+    companyHandle: "c1",
   };
 
   test("works", async () => {
