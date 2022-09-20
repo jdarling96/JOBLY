@@ -49,7 +49,7 @@ class Company {
    * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
    * */
 
-   static async findAll(searchFilters) {
+   static async findAll(searchFilters = {}) {
     let query = `SELECT handle,
                         name,
                         description,

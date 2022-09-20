@@ -6,7 +6,8 @@ const Company = require("./company");
 const { sqlForPartialUpdate } = require("../helpers/sql");
 
 class jobs {
-  static async create({ title, salary, equity, company_handle }) {
+  
+    static async create({ title, salary, equity, company_handle }) {
     const checkCompany = await Company.get(company_handle);
     if (checkCompany) {
       const result = await db.query(
@@ -22,8 +23,9 @@ class jobs {
     }
   }
 
-  static async findAll(searchFilters) {
-    let query = `SELECT 
+  static async findAll(searchFilters = {}) {
+    let query = `SELECT
+                 id, 
                  title, 
                  salary, 
                  equity, 
@@ -71,7 +73,7 @@ class jobs {
          title,
          salary,
          equity,
-         company_handle AS companyHandle
+         company_handle AS "companyHandle"
          FROM jobs
          WHERE id=$1`,
       [id]
@@ -121,3 +123,5 @@ static async remove(id) {
   }
 
 }
+
+module.exports = jobs
