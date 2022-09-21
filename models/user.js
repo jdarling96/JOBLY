@@ -130,14 +130,28 @@ class User {
                   last_name AS "lastName",
                   email,
                   is_admin AS "isAdmin"
-           FROM users
-           WHERE username = $1`,
+                  FROM users
+                  WHERE username = $1`,
       [username]
     );
 
     const user = userRes.rows[0];
 
     if (!user) throw new NotFoundError(`No user: ${username}`);
+
+    const userApps = await db.query(
+      `SELECT job_id AS "jobId"
+       FROM applications
+       WHERE username = $1`,
+      [username]
+    );
+
+    if (!userApps.rows[0]) {
+      user.jobs = `${username} has not yet applied to any jobs.`;
+      return user;
+    }
+
+    user.jobs = userApps.rows.map((j) => j.jobId);
 
     return user;
   }
@@ -211,16 +225,25 @@ class User {
    **/
 
   static async apply(username, jobId) {
-    try {
-      await db.query(
-        `INSERT INTO applications
+    const results = await db.query(
+      `SELECT username, job_id AS "jobId"
+         FROM applications
+        WHERE username = $1
+         AND job_id = $2`,
+      [username, jobId]
+    );
+    const applied = results.rows[0];
+    if (applied)
+      throw new BadRequestError(
+        `${username} has already applied to job: ${jobId}`
+      );
+
+    await db.query(
+      `INSERT INTO applications
         (username, job_id)
         VALUES ($1, $2)`,
-        [username, jobId]
-      );
-    } catch (error) {
-      throw new NotFoundError("Username/jobId is invalid");
-    }
+      [username, jobId]
+    );
   }
 }
 

@@ -216,6 +216,7 @@ describe("GET /users/:username", function () {
         lastName: "U2L",
         email: "user2@user.com",
         isAdmin: false,
+        jobs: expect.any(String)
       },
     });
   });
@@ -231,6 +232,7 @@ describe("GET /users/:username", function () {
         lastName: "U2L",
         email: "user2@user.com",
         isAdmin: false,
+        jobs: expect.any(String)
       },
     });
   });
@@ -354,6 +356,44 @@ describe("PATCH /users/:username", () => {
     expect(isSuccessful).toBeTruthy();
   });
 });
+
+/************************************** POST /users/:username/jobs/:id */
+
+describe('POST users/:username/jobs/:id', function () {
+  test('works for auth users', async () => { 
+    const getId = await db.query(`SELECT id FROM jobs WHERE title = $1`, [
+      "j1",
+    ]);
+    const id = getId.rows[0].id;
+    const resp = await request(app).post(`/users/u1/jobs/${id}`).set("authorization", `Bearer ${u1Token}`)
+    expect(resp.body).toEqual({ applied: id.toString() })
+
+  })
+  test('unauth user for anon', async () => { 
+    const getId = await db.query(`SELECT id FROM jobs WHERE title = $1`, [
+      "j1",
+    ]);
+    const id = getId.rows[0].id;
+    const resp = await request(app).post(`/users/u1/jobs/${id}`)
+    expect(resp.statusCode).toEqual(401)
+
+  })
+  test('unauth user (not admin or curr user)', async () => { 
+    const getId = await db.query(`SELECT id FROM jobs WHERE title = $1`, [
+      "j1",
+    ]);
+    const id = getId.rows[0].id;
+    const resp = await request(app).post(`/users/u1/jobs/${id}`).set("authorization", `Bearer ${u2Token}`)
+    expect(resp.statusCode).toEqual(401)
+
+  })
+  test('user or jobId not found 404', async () => { 
+    
+    const resp = await request(app).post(`/users/nope/jobs/9000`).set("authorization", `Bearer ${u1Token}`)
+    expect(resp.statusCode).toEqual(404)
+
+  })
+})
 
 /************************************** DELETE /users/:username */
 

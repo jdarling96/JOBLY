@@ -140,6 +140,7 @@ describe("get", function () {
       lastName: "U1L",
       email: "u1@email.com",
       isAdmin: false,
+      jobs: expect.any(String)
     });
   });
 
@@ -225,27 +226,20 @@ describe('apply for job', function() {
     expect(res.rows).toBeTruthy()
   })
   
-  test('not found if no such username', async () => { 
+  test('allready applied', async () => { 
    try {
     const getId = await db.query(`SELECT id FROM jobs WHERE title = $1`, [
       "j1",
     ]);
     const id = getId.rows[0].id;
-     await User.apply('nope', id)
+    await User.apply('u1', id)
+    await User.apply('u1', id)
      fail();
     } catch (err) {
-      expect(err instanceof NotFoundError).toBeTruthy();
+      expect(err instanceof BadRequestError).toBeTruthy();
    }
 })
   
-test('not found if no such jobId', async () => { 
-   try {
-    await User.apply('u1', 9000)
-     fail();
-    } catch (err) {
-      expect(err instanceof NotFoundError).toBeTruthy();
-   }
-})
 })
 
 /************************************** remove */

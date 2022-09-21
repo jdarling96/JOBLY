@@ -12,6 +12,7 @@ const {
 } = require("../middleware/auth");
 const { BadRequestError } = require("../expressError");
 const User = require("../models/user");
+const Job = require('../models/job')
 const { createToken } = require("../helpers/tokens");
 const userNewSchema = require("../schemas/userNew.json");
 const userUpdateSchema = require("../schemas/userUpdate.json");
@@ -59,6 +60,9 @@ router.post(
   async (req, res, next) => {
     try {
       const jobId = req.params.id;
+      const username = req.params.username
+      await Promise.all([User.get(username),
+      Job.get(jobId)])
       await User.apply(req.params.username, jobId);
       return res.json({ applied: jobId });
     } catch (err) {

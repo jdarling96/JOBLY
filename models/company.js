@@ -19,26 +19,21 @@ class Company {
 
   static async create({ handle, name, description, numEmployees, logoUrl }) {
     const duplicateCheck = await db.query(
-          `SELECT handle
+      `SELECT handle
            FROM companies
            WHERE handle = $1`,
-        [handle]);
+      [handle]
+    );
 
     if (duplicateCheck.rows[0])
       throw new BadRequestError(`Duplicate company: ${handle}`);
 
     const result = await db.query(
-          `INSERT INTO companies
+      `INSERT INTO companies
            (handle, name, description, num_employees, logo_url)
            VALUES ($1, $2, $3, $4, $5)
            RETURNING handle, name, description, num_employees AS "numEmployees", logo_url AS "logoUrl"`,
-        [
-          handle,
-          name,
-          description,
-          numEmployees,
-          logoUrl,
-        ],
+      [handle, name, description, numEmployees, logoUrl]
     );
     const company = result.rows[0];
 
@@ -50,7 +45,7 @@ class Company {
    * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
    * */
 
-   static async findAll(searchFilters = {}) {
+  static async findAll(searchFilters = {}) {
     let query = `SELECT handle,
                         name,
                         description,
@@ -103,59 +98,36 @@ class Company {
    * Throws NotFoundError if not found.
    **/
 
-static async get(handle) {
+  static async get(handle) {
     const companyRes = await db.query(
-          `SELECT c.handle,
-                  c.name,
-                  c.description,
-                  c.num_employees AS "numEmployees",
-                  c.logo_url AS "logoUrl",
-                  j.id,
-                  j.title,
-                  j.salary,
-                  j.equity
-           FROM companies AS c
-           JOIN jobs AS j
-           ON j.company_handle = c.handle
-           WHERE handle = $1`,
-        [handle]);
+      `SELECT handle,
+                  name,
+                  description,
+                  num_employees AS "numEmployees",
+                  logo_url AS "logoUrl"
+            FROM companies
+            WHERE handle = $1`,
+      [handle]
+    );
 
     const company = companyRes.rows[0];
 
     if (!company) throw new NotFoundError(`No company: ${handle}`);
 
-    
-    
+    const jobRes = await db.query(
+      `SELECT id, title, salary, equity
+       FROM jobs
+       WHERE company_handle = $1`,
+      [handle]
+    );
 
-    return {
-      handle: company.handle,
-      name: company.name,
-      description: company.description,
-      numEmployees: company.numEmployees,
-      logoUrl: company.logoUrl,
-      jobs : companyRes.rows.map(jobs => ({
-        id: jobs.id,
-        title: jobs.title,
-        salary: jobs.salary,
-        equity: jobs.equity
-      }))
-
+    if (!jobRes.rows[0]) {
+      company.jobs = `${handle} has not posted any jobs yet.`;
+      return company;
     }
-  
 
-    /* return companyRes.rows.map(company => ({
-      handle: company.handle,
-      name: company.name,
-      description: company.description,
-      numEmployees: company.numEmployees,
-      logoUrl: company.logoUrl,
-      jobs: [{
-        title: company.title,
-        salary: company.salary,
-        equity: company.equity
-      }]
-
-    })); */
+    company.jobs = jobRes.rows;
+    return company;
   }
 
   /** Update company data with `data`.
@@ -171,12 +143,10 @@ static async get(handle) {
    */
 
   static async update(handle, data) {
-    const { setCols, values } = sqlForPartialUpdate(
-        data,
-        {
-          numEmployees: "num_employees",
-          logoUrl: "logo_url",
-        });
+    const { setCols, values } = sqlForPartialUpdate(data, {
+      numEmployees: "num_employees",
+      logoUrl: "logo_url",
+    });
     const handleVarIdx = "$" + (values.length + 1);
 
     const querySql = `UPDATE companies 
@@ -202,16 +172,16 @@ static async get(handle) {
 
   static async remove(handle) {
     const result = await db.query(
-          `DELETE
+      `DELETE
            FROM companies
            WHERE handle = $1
            RETURNING handle`,
-        [handle]);
+      [handle]
+    );
     const company = result.rows[0];
 
     if (!company) throw new NotFoundError(`No company: ${handle}`);
   }
 }
-
 
 module.exports = Company;
