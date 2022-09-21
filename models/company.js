@@ -110,6 +110,7 @@ static async get(handle) {
                   c.description,
                   c.num_employees AS "numEmployees",
                   c.logo_url AS "logoUrl",
+                  j.id,
                   j.title,
                   j.salary,
                   j.equity
@@ -133,6 +134,7 @@ static async get(handle) {
       numEmployees: company.numEmployees,
       logoUrl: company.logoUrl,
       jobs : companyRes.rows.map(jobs => ({
+        id: jobs.id,
         title: jobs.title,
         salary: jobs.salary,
         equity: jobs.equity

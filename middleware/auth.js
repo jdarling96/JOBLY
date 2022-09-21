@@ -17,11 +17,10 @@ const { UnauthorizedError } = require("../expressError");
 function authenticateJWT(req, res, next) {
   try {
     const authHeader = req.headers && req.headers.authorization;
-    console.log(authHeader);
+
     if (authHeader) {
       const token = authHeader.replace(/^[Bb]earer /, "").trim();
       res.locals.user = jwt.verify(token, SECRET_KEY);
-      console.log(res.locals.user);
     }
     return next();
   } catch (err) {
@@ -34,7 +33,7 @@ function authenticateJWT(req, res, next) {
  * If not, raises Unauthorized.
  */
 
- function ensureLoggedIn(req, res, next) {
+function ensureLoggedIn(req, res, next) {
   try {
     if (!res.locals.user) throw new UnauthorizedError();
     return next();
@@ -42,7 +41,6 @@ function authenticateJWT(req, res, next) {
     return next(err);
   }
 }
-
 
 /** Middleware to use when they be logged in as an admin user.
  *
@@ -78,10 +76,9 @@ function ensureCorrectUserOrAdmin(req, res, next) {
   }
 }
 
-
 module.exports = {
   authenticateJWT,
   ensureLoggedIn,
   ensureAdmin,
-  ensureCorrectUserOrAdmin
+  ensureCorrectUserOrAdmin,
 };

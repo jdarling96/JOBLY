@@ -209,6 +209,45 @@ describe("update", function () {
   });
 });
 
+/************************************** apply */
+
+describe('apply for job', function() {
+  test('works', async () => { 
+    const getId = await db.query(`SELECT id FROM jobs WHERE title = $1`, [
+      "j1",
+    ]);
+    const id = getId.rows[0].id;
+     await User.apply('u1', id)
+    const res = await db.query(
+      `SELECT * FROM applications WHERE username = $1`,
+      ['u1']
+    ) 
+    expect(res.rows).toBeTruthy()
+  })
+  
+  test('not found if no such username', async () => { 
+   try {
+    const getId = await db.query(`SELECT id FROM jobs WHERE title = $1`, [
+      "j1",
+    ]);
+    const id = getId.rows[0].id;
+     await User.apply('nope', id)
+     fail();
+    } catch (err) {
+      expect(err instanceof NotFoundError).toBeTruthy();
+   }
+})
+  
+test('not found if no such jobId', async () => { 
+   try {
+    await User.apply('u1', 9000)
+     fail();
+    } catch (err) {
+      expect(err instanceof NotFoundError).toBeTruthy();
+   }
+})
+})
+
 /************************************** remove */
 
 describe("remove", function () {
