@@ -204,6 +204,8 @@ class User {
 
     if (!user) throw new NotFoundError(`No user: ${username}`);
   }
+
+  
 }
 
 

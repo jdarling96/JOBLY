@@ -3,6 +3,7 @@
 const db = require("../db");
 const { BadRequestError, NotFoundError } = require("../expressError");
 const { sqlForPartialUpdate } = require("../helpers/sql");
+const jobs = require("./job");
 
 /** Related functions for companies. */
 
@@ -104,12 +105,17 @@ class Company {
 
 static async get(handle) {
     const companyRes = await db.query(
-          `SELECT handle,
-                  name,
-                  description,
-                  num_employees AS "numEmployees",
-                  logo_url AS "logoUrl"
-           FROM companies
+          `SELECT c.handle,
+                  c.name,
+                  c.description,
+                  c.num_employees AS "numEmployees",
+                  c.logo_url AS "logoUrl",
+                  j.title,
+                  j.salary,
+                  j.equity
+           FROM companies AS c
+           JOIN jobs AS j
+           ON j.company_handle = c.handle
            WHERE handle = $1`,
         [handle]);
 
@@ -117,7 +123,37 @@ static async get(handle) {
 
     if (!company) throw new NotFoundError(`No company: ${handle}`);
 
-    return company;
+    
+    
+
+    return {
+      handle: company.handle,
+      name: company.name,
+      description: company.description,
+      numEmployees: company.numEmployees,
+      logoUrl: company.logoUrl,
+      jobs : companyRes.rows.map(jobs => ({
+        title: jobs.title,
+        salary: jobs.salary,
+        equity: jobs.equity
+      }))
+
+    }
+  
+
+    /* return companyRes.rows.map(company => ({
+      handle: company.handle,
+      name: company.name,
+      description: company.description,
+      numEmployees: company.numEmployees,
+      logoUrl: company.logoUrl,
+      jobs: [{
+        title: company.title,
+        salary: company.salary,
+        equity: company.equity
+      }]
+
+    })); */
   }
 
   /** Update company data with `data`.
